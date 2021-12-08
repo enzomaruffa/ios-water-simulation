@@ -12,7 +12,7 @@ class GameScene: SKScene {
     
     let ID_BORDER: Float = -1
     let ID_STARTING: Float = 0
-    let MATRIX_SIZE = 80
+    let MATRIX_SIZE = 100
     
     lazy var containerNode = {
         SKSpriteNode(imageNamed: "container")
@@ -111,7 +111,7 @@ class GameScene: SKScene {
         let edgePoint = CGPoint(x: circleSize, y: 0)
         let maxDistance = center.distance(to: edgePoint)
         
-        print("[createSimulationMatrixes] maxDistance: \(maxDistance)")
+//        print("[createSimulationMatrixes] maxDistance: \(maxDistance)")
         
         // Draw a circle of border in cell matrix
         for i in 0..<count {
@@ -121,7 +121,7 @@ class GameScene: SKScene {
                 
                 // Check if this point belongs to the circle
                 let distance = node.position.distance(to: center)
-                print("[createSimulationMatrixes] distance: \(distance)")
+//                print("[createSimulationMatrixes] distance: \(distance)")
                 
                 // If the node is not intersecting with the container, mark it as a border
                 if distance >= maxDistance {
@@ -438,10 +438,4 @@ extension GameScene {
 
 func clamp(_ x: Float, _ minv: Float, _ maxv: Float) -> Float {
     max(minv, min(maxv, x))
-}
-
-extension CGPoint {
-    func distance(to point: CGPoint) -> CGFloat {
-        return sqrt(pow((point.x - x), 2) + pow((point.y - y), 2))
-    }
 }
