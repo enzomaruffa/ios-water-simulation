@@ -6,3 +6,12 @@
 - [ ] Integrate phone velocity to change gravity
 - [ ] Tweak parameters
 - [ ] Clean everything up
+- [ ] Show this project to little pedrinho
+
+
+
+
+
+
+
+Po irmeu muito cool isso ai!
