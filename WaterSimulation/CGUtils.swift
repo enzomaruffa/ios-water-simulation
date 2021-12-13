@@ -101,9 +101,15 @@ public extension CGVector {
     }
     
     public func rotate(radians: Double) -> CGVector {
+        print(  "Rotate \(self) by \(radians)")
         let ca = CGFloat(cos(radians))
         let sa = CGFloat(sin(radians))
+        print(  "Result \(CGVector(dx: ca * dx - sa * dy, dy: sa * dx + ca * dy))")
         return CGVector(dx: ca * dx - sa * dy, dy: sa * dx + ca * dy)
+    }
+    
+    public func angle(to otherVector: CGVector) -> CGFloat {
+        atan2(otherVector.dy, otherVector.dx) - atan2(self.dy, self.dx)
     }
 }
 

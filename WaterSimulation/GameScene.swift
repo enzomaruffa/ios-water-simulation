@@ -37,14 +37,48 @@ class GameScene: SKScene {
     let minFlow: Float = 0.9 // ??
     let maxSpeed: Float = 10.0 // ??
     
+    let diagonalsVectors = [
+        CGVector(dx: -1.2, dy: 0),
+        CGVector(dx: -0.6, dy: 0.6),
+        CGVector(dx: 0, dy: 1.2),
+        CGVector(dx: 0.6, dy: 0.6),
+        CGVector(dx: 1.2, dy: 0),
+        CGVector(dx: -0.6, dy: -0.6),
+        CGVector(dx: 0, dy: -1.2),
+        CGVector(dx: 0.6, dy: -0.6)
+    ]
+    
     let defaultGravity: (i: Float, j: Float) = (i: -1, j: 0)
     var gravity: (i: Float, j: Float) = (i: 0, j: 0)
     {
         didSet {
             gravities[.down] = gravity
             gravities[.up] = (i: -gravity.i, j: -gravity.j)
-            gravities[.left] = (i: gravity.j, j: -gravity.i)
-            gravities[.right] = (i: -gravity.j, j: gravity.i)
+            gravities[.left] = (i: -gravity.j, j: gravity.i)
+            gravities[.right] = (i: gravity.j, j: -gravity.i)
+            
+            let gravityV = CGVector(dx: CGFloat(gravity.j), dy: CGFloat(gravity.i))
+            print("gravityV: \(gravityV)")
+            
+            let closestV = (diagonalsVectors.map({
+                var angle = abs(gravityV.angle(to: $0))
+                
+                angle = angle > .pi ? (2 * .pi) - angle : angle
+                print("$0 is \($0), angle is \(angle)")
+                return ($0, angle)
+            }).min(by: { $0.1 < $1.1 }) ?? (gravityV, CGFloat(0))).0
+            print("closestV: \(closestV)")
+            
+            let rotatedVector = closestV.rotate(degrees: 45)
+            print("rotatedVector: \(rotatedVector)")
+            
+            let rotatedGravity = (i: Float(rotatedVector.dy), j: Float(rotatedVector.dx))
+            print("rotatedGravity: \(rotatedGravity)")
+        
+            gravities[.downRight] = rotatedGravity
+            gravities[.upLeft] = (i: -rotatedGravity.i, j: -rotatedGravity.j)
+            gravities[.downLeft] = (i: -rotatedGravity.j, j: rotatedGravity.i)
+            gravities[.upRight] = (i: rotatedGravity.j, j: -rotatedGravity.i)
         }
     }
     var gravities: [Direction: (i: Float, j: Float)] = [:]
@@ -179,15 +213,28 @@ class GameScene: SKScene {
         
         let coordinate = (i: i, j: j)
         
-        print("=====")
+        print("====================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================")
         print("Gravity \(gravity)")
+        
+        let rotatedVector = CGVector(dx: CGFloat(gravity.j), dy: CGFloat(gravity.i)).rotate(degrees: 45)
+        let rotatedGravity = (i: Float(rotatedVector.dy), j: Float(rotatedVector.dx))
+        
+        print("Rotated Gravity \(rotatedGravity)")
+        
         print("(i: \(i), j: \(j))")
         
-        print("below: \(getCellCoordinates(from: coordinate, direction: .down))")
+        print("down: \(getCellCoordinates(from: coordinate, direction: .down))")
         print("left: \(getCellCoordinates(from: coordinate, direction: .left))")
         print("right: \(getCellCoordinates(from: coordinate, direction: .right))")
-        print("top: \(getCellCoordinates(from: coordinate, direction: .up))")
-        
+        print("up: \(getCellCoordinates(from: coordinate, direction: .up))")
+        print("downLeft: \(getCellCoordinates(from: coordinate, direction: .downLeft))")
+        print("downRight: \(getCellCoordinates(from: coordinate, direction: .downRight))")
+        print("upLeft: \(getCellCoordinates(from: coordinate, direction: .upLeft))")
+        print("upRight: \(getCellCoordinates(from: coordinate, direction: .upRight))")
+        print("rotated down: \(getCellCoordinates(from: coordinate, direction: .downLeft))")
+        print("rotated left: \(getCellCoordinates(from: coordinate, direction: .downRight))")
+        print("rotated right: \(getCellCoordinates(from: coordinate, direction: .upLeft))")
+        print("rotated up: \(getCellCoordinates(from: coordinate, direction: .upRight))")
         
 //        if (cellMatrix[i][j] == 0) {
             cellMatrix[i][j] = 1
@@ -254,25 +301,45 @@ class GameScene: SKScene {
         }
         
         let reference = (i: 40, j: 40)
-        
+
         let below = getCellCoordinates(from: reference, direction: .down)
         nodeMatrix[below.i][below.j].texture = nil
         nodeMatrix[below.i][below.j].color = .red
-        
-        
+
+
         let left = getCellCoordinates(from: reference, direction: .left)
         nodeMatrix[left.i][left.j].texture = nil
         nodeMatrix[left.i][left.j].color = .yellow
-        
-        
+
+
         let right = getCellCoordinates(from: reference, direction: .right)
         nodeMatrix[right.i][right.j].texture = nil
         nodeMatrix[right.i][right.j].color = .green
-        
-        
+
+
         let top = getCellCoordinates(from: reference, direction: .up)
         nodeMatrix[top.i][top.j].texture = nil
         nodeMatrix[top.i][top.j].color = .blue
+
+
+        let downleft = getCellCoordinates(from: reference, direction: .downLeft)
+        nodeMatrix[downleft.i][downleft.j].texture = nil
+        nodeMatrix[downleft.i][downleft.j].color = .systemPink
+
+
+        let downRight = getCellCoordinates(from: reference, direction: .downRight)
+        nodeMatrix[downRight.i][downRight.j].texture = nil
+        nodeMatrix[downRight.i][downRight.j].color = .brown
+
+
+        let upLeft = getCellCoordinates(from: reference, direction: .upLeft)
+        nodeMatrix[upLeft.i][upLeft.j].texture = nil
+        nodeMatrix[upLeft.i][upLeft.j].color = .cyan
+
+
+        let upRight = getCellCoordinates(from: reference, direction: .upRight)
+        nodeMatrix[upRight.i][upRight.j].texture = nil
+        nodeMatrix[upRight.i][upRight.j].color = .gray
     }
     
     fileprivate func getTexture(for value: Float) -> SKTexture {
@@ -336,6 +403,11 @@ extension GameScene {
         case down
         case left // rotates 90 degrees left
         case right // rotates 90 degrees right
+        
+        case upLeft
+        case upRight
+        case downLeft
+        case downRight
     }
     
     // Water Simulation
@@ -422,6 +494,63 @@ extension GameScene {
                 }
                 
                 guard remainingMass > 0 else { continue }
+                
+                
+                
+                let downLeftCoordinates = getCellCoordinates(
+                    from: (i: i, j: j),
+                    direction: .downLeft,
+                    limits: limits)
+                
+            
+            // Downleft
+            if let downCoordinates = downCoordinates,
+               let downLeftCoordinates = downLeftCoordinates,
+               downCoordinates != downLeftCoordinates,
+               cellMatrix[downLeftCoordinates.i][downLeftCoordinates.j] != ID_BORDER {
+                
+                let downLeftValue = cellMatrix[downLeftCoordinates.i][downLeftCoordinates.j]
+                
+                flow = getStableState(totalMass: (remainingMass/2) + downLeftValue) - downLeftValue
+                
+                if flow > minFlow {
+                    flow *= 0.5 //leads to smoother flow
+                }
+                
+                flow = clamp(flow, 0, min(maxSpeed, remainingMass/2))
+                
+                cellMatrixBuffer[i][j] -= flow
+                cellMatrixBuffer[downLeftCoordinates.i][downLeftCoordinates.j] += flow
+                remainingMass -= flow
+            }
+                
+                
+                let downRightCoordinates = getCellCoordinates(
+                    from: (i: i, j: j),
+                    direction: .downRight,
+                    limits: limits)
+                
+            
+            // DownRight
+            if let downCoordinates = downCoordinates,
+               let downRightCoordinates = downRightCoordinates,
+               downCoordinates != downRightCoordinates,
+               cellMatrix[downRightCoordinates.i][downRightCoordinates.j] != ID_BORDER {
+                
+                let downRightValue = cellMatrix[downRightCoordinates.i][downRightCoordinates.j]
+                
+                flow = getStableState(totalMass: (remainingMass/2) + downRightValue) - downRightValue
+                
+                if flow > minFlow {
+                    flow *= 0.5 //leads to smoother flow
+                }
+                
+                flow = clamp(flow, 0, min(maxSpeed, remainingMass/2))
+                
+                cellMatrixBuffer[i][j] -= flow
+                cellMatrixBuffer[downRightCoordinates.i][downRightCoordinates.j] += flow
+                remainingMass -= flow
+            }
                 
                 //Left
                 let leftCoordinates = getCellCoordinates(
