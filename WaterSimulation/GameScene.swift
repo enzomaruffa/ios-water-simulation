@@ -12,7 +12,7 @@ class GameScene: SKScene {
     
     let ID_BORDER: Float = -1
     let ID_STARTING: Float = 0
-    let MATRIX_SIZE = 100
+    let MATRIX_SIZE = 80
     
     lazy var containerNode = {
         SKSpriteNode(imageNamed: "container")
@@ -32,14 +32,26 @@ class GameScene: SKScene {
     
     // Water properties
     let maxMass: Float = 1.0 //The normal, un-pressurized mass of a full water cell
-    let maxCompress: Float = 0.02 //How much excess water a cell can store, compared to the cell above it
+    let maxCompress: Float = 0.03 //How much excess water a cell can store, compared to the cell above it
     let minMass: Float = 0.0001 //Ignore cells that are almost dry
-    let minFlow: Float = 1.0 // ??
-    let maxSpeed: Float = 8.0 // ??
+    let minFlow: Float = 0.9 // ??
+    let maxSpeed: Float = 10.0 // ??
     
-    var gravity: (i: Float, j: Float) = (i: -1, j: 0)
+    let defaultGravity: (i: Float, j: Float) = (i: -1, j: 0)
+    var gravity: (i: Float, j: Float) = (i: 0, j: 0)
+    {
+        didSet {
+            gravities[.down] = gravity
+            gravities[.up] = (i: -gravity.i, j: -gravity.j)
+            gravities[.left] = (i: gravity.j, j: -gravity.i)
+            gravities[.right] = (i: -gravity.j, j: gravity.i)
+        }
+    }
+    var gravities: [Direction: (i: Float, j: Float)] = [:]
     
     override func didMove(to view: SKView) {
+        gravity = defaultGravity
+        
         print("[didMove] createWaterContainer()")
         createWaterContainer()
         
@@ -67,9 +79,9 @@ class GameScene: SKScene {
         nodeSetup(containerNode)
         
         // Add the border
-//        containerBorderNode.zPosition = 3
-//        addChild(containerBorderNode)
-//        nodeSetup(containerBorderNode)
+        containerBorderNode.zPosition = 3
+        addChild(containerBorderNode)
+        nodeSetup(containerBorderNode)
     }
     
     fileprivate func createNodeMatrix(count: Int,
@@ -107,8 +119,16 @@ class GameScene: SKScene {
         }
         
         let circleSize = containerNode.frame.width/2
+        
+        // This is the proportion of the external circle in relation to the internal circle
+        let ringProportion = 0.1
+        let ringSize = circleSize * ringProportion
+        
+        let actualSize = circleSize - ringSize
+        
         let center = CGPoint.zero
-        let edgePoint = CGPoint(x: circleSize, y: 0)
+        
+        let edgePoint = CGPoint(x: actualSize, y: 0)
         let maxDistance = center.distance(to: edgePoint)
         
 //        print("[createSimulationMatrixes] maxDistance: \(maxDistance)")
@@ -156,6 +176,18 @@ class GameScene: SKScene {
         
         let i = matrixPos.i
         let j = matrixPos.j
+        
+        let coordinate = (i: i, j: j)
+        
+        print("=====")
+        print("Gravity \(gravity)")
+        print("(i: \(i), j: \(j))")
+        
+        print("below: \(getCellCoordinates(from: coordinate, direction: .down))")
+        print("left: \(getCellCoordinates(from: coordinate, direction: .left))")
+        print("right: \(getCellCoordinates(from: coordinate, direction: .right))")
+        print("top: \(getCellCoordinates(from: coordinate, direction: .up))")
+        
         
 //        if (cellMatrix[i][j] == 0) {
             cellMatrix[i][j] = 1
@@ -220,6 +252,27 @@ class GameScene: SKScene {
                 node.texture = getTexture(for: intensity)
             }
         }
+        
+        let reference = (i: 40, j: 40)
+        
+        let below = getCellCoordinates(from: reference, direction: .down)
+        nodeMatrix[below.i][below.j].texture = nil
+        nodeMatrix[below.i][below.j].color = .red
+        
+        
+        let left = getCellCoordinates(from: reference, direction: .left)
+        nodeMatrix[left.i][left.j].texture = nil
+        nodeMatrix[left.i][left.j].color = .yellow
+        
+        
+        let right = getCellCoordinates(from: reference, direction: .right)
+        nodeMatrix[right.i][right.j].texture = nil
+        nodeMatrix[right.i][right.j].color = .green
+        
+        
+        let top = getCellCoordinates(from: reference, direction: .up)
+        nodeMatrix[top.i][top.j].texture = nil
+        nodeMatrix[top.i][top.j].color = .blue
     }
     
     fileprivate func getTexture(for value: Float) -> SKTexture {
@@ -230,25 +283,39 @@ class GameScene: SKScene {
         
         let bytes: [UInt8]
         
-        if rounded == -1 {
-            bytes = [
-                UInt8(255), // red
-                UInt8(0), // green
-                UInt8(0), // blue
-                UInt8(1)              // alpha
-            ]
-        } else if rounded == 0 {
+        if rounded == -1 || rounded == 0 {
             bytes = [
                 UInt8(0), // red
                 UInt8(0), // green
                 UInt8(0), // blue
                 UInt8(0)              // alpha
             ]
+        } else if rounded >= 0.9 {
+            bytes = [
+                UInt8(139), // red
+                UInt8(157), // green
+                UInt8(235), // blue
+                UInt8(255)              // alpha
+            ]
+        } else if rounded >= 0.5 {
+            bytes = [
+                UInt8(172), // red
+                UInt8(183), // green
+                UInt8(245), // blue
+                UInt8(255)              // alpha
+            ]
+        } else if rounded >= 0.1 {
+            bytes = [
+                UInt8(187), // red
+                UInt8(196), // green
+                UInt8(245), // blue
+                UInt8(255)              // alpha
+            ]
         } else {
             bytes = [
-                UInt8(140), // red
-                UInt8(155), // green
-                UInt8(248), // blue
+                UInt8(200), // red
+                UInt8(207), // green
+                UInt8(243), // blue
                 UInt8(255)              // alpha
             ]
         }
@@ -269,15 +336,6 @@ extension GameScene {
         case down
         case left // rotates 90 degrees left
         case right // rotates 90 degrees right
-        
-        func transformGravity(_ gravity: (i: Float, j: Float)) -> (i: Float, j: Float) {
-            let i = gravity.i
-            let j = gravity.j
-            if self == .up { return (i: -i, j: -j) }
-            if self == .left { return (i: j, j: -i) }
-            if self == .right { return (i: -j, j: i) }
-            return gravity
-        }
     }
     
     // Water Simulation
@@ -292,17 +350,24 @@ extension GameScene {
         }
     }
     
-    // Applies direction in a cell using the custom gravity set. If the cell exceeds any limits, returns nil
     func getCellCoordinates(from coordinate: (i: Int, j: Int),
-                 direction: Direction,
-                 limits: (i: Int, j: Int)) -> (i: Int, j: Int)? {
-        let force = direction.transformGravity(gravity)
+                           direction: Direction) -> (i: Int, j: Int) {
+        let force = gravities[direction]!
         
         let newCoordinateF = (i: Float(coordinate.i) + force.i,
                              j: Float(coordinate.j) + force.j)
         
         let newCoordinate = (i: Int(newCoordinateF.i.rounded(.toNearestOrEven)),
                              j: Int(newCoordinateF.j.rounded(.toNearestOrEven)))
+        
+        return newCoordinate
+    }
+    
+    // Applies direction in a cell using the custom gravity set. If the cell exceeds any limits, returns nil
+    func getCellCoordinates(from coordinate: (i: Int, j: Int),
+                 direction: Direction,
+                 limits: (i: Int, j: Int)) -> (i: Int, j: Int)? {
+        let newCoordinate = getCellCoordinates(from: coordinate, direction: direction)
         
         if newCoordinate.i >= limits.i
             || newCoordinate.j >= limits.j

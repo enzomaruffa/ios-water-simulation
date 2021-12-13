@@ -24,7 +24,7 @@ class GameViewController: UIViewController {
             scene = GameScene(fileNamed: "GameScene")!
          
             // Set the scale mode to scale to fit the window
-            scene!.scaleMode = .aspectFill
+            scene!.scaleMode = .aspectFit
             
             // Present the scene
             view.presentScene(scene)
@@ -51,14 +51,14 @@ class GameViewController: UIViewController {
                                block: { (timer) in
                 if let data = self.motion.deviceMotion {
                     // Get the attitude relative to the magnetic north reference frame.
-                    print(data.gravity)
+//                    print(data.gravity)
                     
                     // +X = -j
                     // -X = +j
                     // +Y = -i
                     // -Y = +i
                     let vector = CGVector(dx: CGFloat(data.gravity.x),
-                                          dy: CGFloat(data.gravity.y)).normalized()
+                                          dy: CGFloat(data.gravity.y)).normalized() // * 1.2
                     
                     self.scene?.gravity = (i: Float(vector.dy),
                                            j: Float(vector.dx))
