@@ -32,10 +32,10 @@ class GameScene: SKScene {
     
     // Water properties
     let maxMass: Float = 1.0 //The normal, un-pressurized mass of a full water cell
-    let maxCompress: Float = 0.03 //How much excess water a cell can store, compared to the cell above it
+    let maxCompress: Float = 0.02 //How much excess water a cell can store, compared to the cell above it
     let minMass: Float = 0.0001 //Ignore cells that are almost dry
-    let minFlow: Float = 0.9 // ??
-    let maxSpeed: Float = 10.0 // ??
+    let minFlow: Float = 0.95 // ??
+    let maxSpeed: Float = 50 // ??
     
     let diagonalsVectors = [
         CGVector(dx: -1.2, dy: 0),
@@ -58,22 +58,22 @@ class GameScene: SKScene {
             gravities[.right] = (i: gravity.j, j: -gravity.i)
             
             let gravityV = CGVector(dx: CGFloat(gravity.j), dy: CGFloat(gravity.i))
-            print("gravityV: \(gravityV)")
+//            print("gravityV: \(gravityV)")
             
             let closestV = (diagonalsVectors.map({
                 var angle = abs(gravityV.angle(to: $0))
                 
                 angle = angle > .pi ? (2 * .pi) - angle : angle
-                print("$0 is \($0), angle is \(angle)")
+//                print("$0 is \($0), angle is \(angle)")
                 return ($0, angle)
             }).min(by: { $0.1 < $1.1 }) ?? (gravityV, CGFloat(0))).0
-            print("closestV: \(closestV)")
+//            print("closestV: \(closestV)")
             
             let rotatedVector = closestV.rotate(degrees: 45)
-            print("rotatedVector: \(rotatedVector)")
+//            print("rotatedVector: \(rotatedVector)")
             
             let rotatedGravity = (i: Float(rotatedVector.dy), j: Float(rotatedVector.dx))
-            print("rotatedGravity: \(rotatedGravity)")
+//            print("rotatedGravity: \(rotatedGravity)")
         
             gravities[.downRight] = rotatedGravity
             gravities[.upLeft] = (i: -rotatedGravity.i, j: -rotatedGravity.j)
@@ -155,7 +155,7 @@ class GameScene: SKScene {
         let circleSize = containerNode.frame.width/2
         
         // This is the proportion of the external circle in relation to the internal circle
-        let ringProportion = 0.1
+        let ringProportion = 0.095
         let ringSize = circleSize * ringProportion
         
         let actualSize = circleSize - ringSize
@@ -164,6 +164,8 @@ class GameScene: SKScene {
         
         let edgePoint = CGPoint(x: actualSize, y: 0)
         let maxDistance = center.distance(to: edgePoint)
+        
+        let waterDistance = maxDistance / 1.8
         
 //        print("[createSimulationMatrixes] maxDistance: \(maxDistance)")
         
@@ -180,6 +182,10 @@ class GameScene: SKScene {
                 // If the node is not intersecting with the container, mark it as a border
                 if distance >= maxDistance {
                     cellMatrix[i][j] = ID_BORDER
+                }
+                
+                if distance <= waterDistance {
+                    cellMatrix[i][j] = 2
                 }
             }
         }
@@ -213,28 +219,28 @@ class GameScene: SKScene {
         
         let coordinate = (i: i, j: j)
         
-        print("====================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================")
-        print("Gravity \(gravity)")
+//        print("====================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================")
+//        print("Gravity \(gravity)")
         
         let rotatedVector = CGVector(dx: CGFloat(gravity.j), dy: CGFloat(gravity.i)).rotate(degrees: 45)
         let rotatedGravity = (i: Float(rotatedVector.dy), j: Float(rotatedVector.dx))
         
-        print("Rotated Gravity \(rotatedGravity)")
-        
-        print("(i: \(i), j: \(j))")
-        
-        print("down: \(getCellCoordinates(from: coordinate, direction: .down))")
-        print("left: \(getCellCoordinates(from: coordinate, direction: .left))")
-        print("right: \(getCellCoordinates(from: coordinate, direction: .right))")
-        print("up: \(getCellCoordinates(from: coordinate, direction: .up))")
-        print("downLeft: \(getCellCoordinates(from: coordinate, direction: .downLeft))")
-        print("downRight: \(getCellCoordinates(from: coordinate, direction: .downRight))")
-        print("upLeft: \(getCellCoordinates(from: coordinate, direction: .upLeft))")
-        print("upRight: \(getCellCoordinates(from: coordinate, direction: .upRight))")
-        print("rotated down: \(getCellCoordinates(from: coordinate, direction: .downLeft))")
-        print("rotated left: \(getCellCoordinates(from: coordinate, direction: .downRight))")
-        print("rotated right: \(getCellCoordinates(from: coordinate, direction: .upLeft))")
-        print("rotated up: \(getCellCoordinates(from: coordinate, direction: .upRight))")
+//        print("Rotated Gravity \(rotatedGravity)")
+//
+//        print("(i: \(i), j: \(j))")
+//
+//        print("down: \(getCellCoordinates(from: coordinate, direction: .down))")
+//        print("left: \(getCellCoordinates(from: coordinate, direction: .left))")
+//        print("right: \(getCellCoordinates(from: coordinate, direction: .right))")
+//        print("up: \(getCellCoordinates(from: coordinate, direction: .up))")
+//        print("downLeft: \(getCellCoordinates(from: coordinate, direction: .downLeft))")
+//        print("downRight: \(getCellCoordinates(from: coordinate, direction: .downRight))")
+//        print("upLeft: \(getCellCoordinates(from: coordinate, direction: .upLeft))")
+//        print("upRight: \(getCellCoordinates(from: coordinate, direction: .upRight))")
+//        print("rotated down: \(getCellCoordinates(from: coordinate, direction: .downLeft))")
+//        print("rotated left: \(getCellCoordinates(from: coordinate, direction: .downRight))")
+//        print("rotated right: \(getCellCoordinates(from: coordinate, direction: .upLeft))")
+//        print("rotated up: \(getCellCoordinates(from: coordinate, direction: .upRight))")
         
 //        if (cellMatrix[i][j] == 0) {
             cellMatrix[i][j] = 1
@@ -300,46 +306,46 @@ class GameScene: SKScene {
             }
         }
         
-        let reference = (i: 40, j: 40)
-
-        let below = getCellCoordinates(from: reference, direction: .down)
-        nodeMatrix[below.i][below.j].texture = nil
-        nodeMatrix[below.i][below.j].color = .red
-
-
-        let left = getCellCoordinates(from: reference, direction: .left)
-        nodeMatrix[left.i][left.j].texture = nil
-        nodeMatrix[left.i][left.j].color = .yellow
-
-
-        let right = getCellCoordinates(from: reference, direction: .right)
-        nodeMatrix[right.i][right.j].texture = nil
-        nodeMatrix[right.i][right.j].color = .green
-
-
-        let top = getCellCoordinates(from: reference, direction: .up)
-        nodeMatrix[top.i][top.j].texture = nil
-        nodeMatrix[top.i][top.j].color = .blue
-
-
-        let downleft = getCellCoordinates(from: reference, direction: .downLeft)
-        nodeMatrix[downleft.i][downleft.j].texture = nil
-        nodeMatrix[downleft.i][downleft.j].color = .systemPink
-
-
-        let downRight = getCellCoordinates(from: reference, direction: .downRight)
-        nodeMatrix[downRight.i][downRight.j].texture = nil
-        nodeMatrix[downRight.i][downRight.j].color = .brown
-
-
-        let upLeft = getCellCoordinates(from: reference, direction: .upLeft)
-        nodeMatrix[upLeft.i][upLeft.j].texture = nil
-        nodeMatrix[upLeft.i][upLeft.j].color = .cyan
-
-
-        let upRight = getCellCoordinates(from: reference, direction: .upRight)
-        nodeMatrix[upRight.i][upRight.j].texture = nil
-        nodeMatrix[upRight.i][upRight.j].color = .gray
+//        let reference = (i: 40, j: 40)
+//
+//        let below = getCellCoordinates(from: reference, direction: .down)
+//        nodeMatrix[below.i][below.j].texture = nil
+//        nodeMatrix[below.i][below.j].color = .red
+//
+//
+//        let left = getCellCoordinates(from: reference, direction: .left)
+//        nodeMatrix[left.i][left.j].texture = nil
+//        nodeMatrix[left.i][left.j].color = .yellow
+//
+//
+//        let right = getCellCoordinates(from: reference, direction: .right)
+//        nodeMatrix[right.i][right.j].texture = nil
+//        nodeMatrix[right.i][right.j].color = .green
+//
+//
+//        let top = getCellCoordinates(from: reference, direction: .up)
+//        nodeMatrix[top.i][top.j].texture = nil
+//        nodeMatrix[top.i][top.j].color = .blue
+//
+//
+//        let downleft = getCellCoordinates(from: reference, direction: .downLeft)
+//        nodeMatrix[downleft.i][downleft.j].texture = nil
+//        nodeMatrix[downleft.i][downleft.j].color = .systemPink
+//
+//
+//        let downRight = getCellCoordinates(from: reference, direction: .downRight)
+//        nodeMatrix[downRight.i][downRight.j].texture = nil
+//        nodeMatrix[downRight.i][downRight.j].color = .brown
+//
+//
+//        let upLeft = getCellCoordinates(from: reference, direction: .upLeft)
+//        nodeMatrix[upLeft.i][upLeft.j].texture = nil
+//        nodeMatrix[upLeft.i][upLeft.j].color = .cyan
+//
+//
+//        let upRight = getCellCoordinates(from: reference, direction: .upRight)
+//        nodeMatrix[upRight.i][upRight.j].texture = nil
+//        nodeMatrix[upRight.i][upRight.j].color = .gray
     }
     
     fileprivate func getTexture(for value: Float) -> SKTexture {
@@ -364,14 +370,14 @@ class GameScene: SKScene {
                 UInt8(235), // blue
                 UInt8(255)              // alpha
             ]
-        } else if rounded >= 0.5 {
+        } else if rounded >= 0.7 {
             bytes = [
                 UInt8(172), // red
                 UInt8(183), // green
                 UInt8(245), // blue
                 UInt8(255)              // alpha
             ]
-        } else if rounded >= 0.1 {
+        } else if rounded > 0 {
             bytes = [
                 UInt8(187), // red
                 UInt8(196), // green

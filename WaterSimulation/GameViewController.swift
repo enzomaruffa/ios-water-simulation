@@ -21,7 +21,8 @@ class GameViewController: UIViewController {
         
         if let view = self.view as! SKView? {
             // Load the SKScene from 'GameScene.sks'
-            scene = GameScene(fileNamed: "GameScene")!
+            scene = GameScene(size: CGSize(width: 750, height: 1334))
+            scene?.anchorPoint = CGPoint(x: 0.5, y: 0.5)
          
             // Set the scale mode to scale to fit the window
             scene!.scaleMode = .aspectFit
@@ -29,12 +30,7 @@ class GameViewController: UIViewController {
             // Present the scene
             view.presentScene(scene)
         
-        
             view.ignoresSiblingOrder = true
-            
-            view.showsFPS = true
-            view.showsPhysics = true
-            view.showsNodeCount = true
         }
         
         startDeviceMotion()
